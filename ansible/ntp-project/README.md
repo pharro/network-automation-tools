@@ -1,6 +1,9 @@
-# Ansible Playbook to update NTP servers, verify working, and cleanup old NTP settings.
+# Ansible Playbook to update NTP servers, verify if working, and cleanup old NTP settings.
 
 ## How to use:
+Define new servers to be added.
+*This will remove any other servers currently configured.*
+
 For testing, the hosts is currently set to a static host.  Update the playbook to include the group of hosts you wish to update.
 Also, the failed_when condition is set to fail when the new NTP is not ".INIT."  Or not yet working.  Just remove the "not" statement in that condition.
 
