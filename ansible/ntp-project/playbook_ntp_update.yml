@@ -1,0 +1,50 @@
+---
+- name: configure NTP for Site Switches
+  hosts: CAN1-ASW1
+  gather_facts: false
+  vars_prompt:
+    - name: ntp_servers
+      prompt: "NTP server to add, sperated by commas"
+      private: no
+  tasks:
+    - set_fact:
+        location: "{{ ansible_host.split('.')[1] }}"
+        ntp_list: "{{ ntp_servers.split(',') }}"
+    - name: PRE-CHECK
+      ansible.netcommon.cli_parse:
+        command: show ntp config
+        parser: 
+          name: ansible.netcommon.pyats
+        set_fact: configured_ntp
+    - name: PRINT PRE-CHECK
+      debug:
+        msg: "{{ configured_ntp }}"
+    - name: CONFIGURE NTP
+      ios_config:
+        lines:
+        - ntp server {{ item }}
+        save_when: modified
+      loop: "{{ ntp_list }}"
+    - name: POST-CHECK
+      ansible.netcommon.cli_parse:
+        command: show ntp associations
+        parser: 
+          name: ansible.netcommon.pyats
+        set_fact: ntp
+      failed_when: "'.INIT.' not in ntp['peer'][item]['local_mode']['client']['refid']"
+      loop: "{{ ntp_list }}"
+    - name: Cleanup
+      ios_config:
+        lines:
+        - no ntp server {{ item.key }}
+        save_when: modified
+      loop: "{{configured_ntp['vrf']['default']['address'] | dict2items | difference([ntp_list]) }}"
+    - name: Get Final config
+      ansible.netcommon.cli_parse:
+        command: show ntp config
+        parser: 
+          name: ansible.netcommon.pyats
+        set_fact: final_ntp
+    - name: PRINT Final config to TERMINAL WINDOW
+      debug:
+        msg: "{{ final_ntp }}"
