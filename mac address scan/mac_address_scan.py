@@ -91,10 +91,8 @@ def main():
         config_file="/home/pferro/netdevops_scripts/pharro/projects/MAC_address_Scan/config.yml"
     )
 
-
     # FILTER NORNIR HOSTS
     nr_site_hosts = nr.filter(F(site=site_filter) & ~F(role="ART") & ~F(role="SPARE"))
-    #nr_site_hosts = nr.filter(F(name='DC1-DSW1'))
 
     # EXECUTE PLAYBOOK
     output = nr_site_hosts.run(
